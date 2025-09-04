@@ -10,14 +10,14 @@
       padding: 20px;
       background: #f5f5f5;
       font-family: Arial, sans-serif;
-      overflow: auto; /* scroll en ambas direcciones */
+      overflow: auto; 
     }
 
     .container {
       display: flex;
       flex-direction: column;
       gap: 14px;
-      width: max-content; /* clave para scroll horizontal */
+      width: max-content; 
       position: relative;
     }
 
@@ -61,23 +61,23 @@
       transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
       flex-shrink: 0;
       position: relative;
-      z-index: 2; /* sobre SVG */
+      z-index: 2; 
     }
     .oa:hover {
       transform: translateY(-1px);
       box-shadow: 3px 3px 8px rgba(0,0,0,0.22);
     }
 
-    /* Clases de resaltado por categoría */
+  
     .rel-figuras { background:#ff6666 !important; color:#fff; }
     .rel-medicion { background:#66cc66 !important; color:#fff; }
     .rel-transform { background:#6699ff !important; color:#fff; }
 
-    /* Panel lateral de categorías */
+   
     .panel-rel {
       position: fixed;
       right: 18px;
-      top: 10px;  /* posicion panel de relaciones */
+      top: 10px;  
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 10px;
@@ -101,17 +101,17 @@
     .btn-med { background: #66cc66; color:#063; }
     .btn-tr { background: #6699ff; }
 
-    /* Panel de habilidades */
+
     #panelHabilidades {
-      top: 247px; /* posicion del panel de habilidades */
+      top: 247px; 
     }
     #panelHabilidades button { width: 200px; margin:4px 0; }
     
-    /* Panel secuencia (swap) (movimiento de OAs) */
+    
     #panelSecuencia { top: 520px; }
     #panelSecuencia button { width: 200px; margin:4px 0; }
 
-    /* SVG conexiones */
+  
     #svg-rel { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
 
     .backdrop {
@@ -150,7 +150,7 @@
       cursor: pointer;
     }
 
-    /* Footer */
+    
     footer {
       background: #1f3b66;
       color: #fff;
@@ -171,11 +171,11 @@
   <p style="margin-top:-8px;color:#333333">🔶Los cambios realizados y argumentación puedes encontrarla en: <a href="pdf/cambios_esquema.pdf" target="_blank">Cambios</a></p>
   
 
-  <!-- SVG para dibujar conexiones -->
+  
   <svg id="svg-rel"></svg>
 
   <div class="container" id="mainContainer">
-    <!-- 5° Básico -->
+   
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-5b')">5° Básico</div>
       <div class="oas-container" id="oas-5b" data-curso="5° Básico">
@@ -185,7 +185,7 @@
       </div>
     </div>
 
-    <!-- 6° Básico -->
+    
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-6b')">6° Básico</div>
       <div class="oas-container" id="oas-6b" data-curso="6° Básico">
@@ -198,7 +198,7 @@
       </div>
     </div>
 
-    <!-- 7° Básico -->
+   
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-7b')">7° Básico</div>
       <div class="oas-container" id="oas-7b" data-curso="7° Básico">
@@ -210,7 +210,7 @@
       </div>
     </div>
 
-    <!-- 8° Básico -->
+    
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-8b')">8° Básico</div>
       <div class="oas-container" id="oas-8b" data-curso="8° Básico">
@@ -221,7 +221,7 @@
       </div>
     </div>
 
-    <!-- I° Medio -->
+    
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-1m')">I° Medio</div>
       <div class="oas-container" id="oas-1m" data-curso="I° Medio">
@@ -234,7 +234,7 @@
       </div>
     </div>
 
-    <!-- II° Medio -->
+    
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-2m')">II° Medio</div>
       <div class="oas-container" id="oas-2m" data-curso="II° Medio">
@@ -244,7 +244,7 @@
       </div>
     </div>
 
-    <!-- III° Medio FG -->
+   
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-3mfg')">III° Medio FG</div>
       <div class="oas-container" id="oas-3mfg" data-curso="III° Medio FG">
@@ -252,7 +252,7 @@
       </div>
     </div>
 
-    <!-- IV° Medio FG -->
+   
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-4mfg')">IV° Medio FG</div>
       <div class="oas-container" id="oas-4mfg" data-curso="IV° Medio FG">
@@ -260,7 +260,7 @@
       </div>
     </div>
 
-    <!-- III° y IV° Medio HC (Geometría 3D) -->
+    
     <div class="fila">
       <div class="curso" onclick="toggleOAs('oas-4mhc')">Geometría 3D</div>
       <div class="oas-container" id="oas-4mhc" data-curso="Geometría 3D">
@@ -273,7 +273,7 @@
     </div>
   </div>
 
-  <!-- Panel lateral con categorías -->
+  
   <div class="panel-rel" id="panelRel">
     <h4>Relaciones entre OAs</h4>
     <button class="btn-fig" onclick="toggleRelationship('figuras')">✅Figuras y sus propiedades</button>
@@ -282,7 +282,7 @@
     <button style="background:#000000;" onclick="clearAllRelations()">🧹Limpiar relaciones</button>
   </div>
 
-  <!-- Panel habilidades -->
+ 
   <div class="panel-rel" id="panelHabilidades">
     <h4>Habilidades entre OAs</h4>
     <button style="background:#F73EBE;" onclick="highlightBySkill('argumentar')">🗣️Argumentar y Comunicar</button>
@@ -293,13 +293,13 @@
     <button style="background:#000000;" onclick="clearSkillHighlights()">🧹Limpiar habilidades</button>
   </div>
 
-  <!-- Panel secuencia (intercambios) -->
+
   <div class="panel-rel" id="panelSecuencia">
     <h4>Secuencia (mover OAs)</h4>
     <button style="background:#9C109E;" onclick="aplicarSecuencia()">🔄Cambio de OAs</button>
   </div>
 
-  <!-- Backdrop y Popover (misma lógica tuya) -->
+ 
   <div class="backdrop" id="backdrop"></div>
   <div class="popover" id="popover" role="dialog" aria-modal="true">
     <h3 id="popover-title">Detalle del OA</h3>
@@ -312,7 +312,7 @@
   </footer>
 
   <script>
-    // === NUEVO: mapeo plano (flat) desde oasFullText usando UID "Curso|OA" ===
+    
     const oasFullText = {
 
       "5° Básico": {
@@ -442,7 +442,7 @@
       }
     };
 
-    // Creamos un mapeo plano por UID: "Curso|OA" -> texto
+    
     const oasByUID = {};
     Object.keys(oasFullText).forEach(course => {
       Object.keys(oasFullText[course]).forEach(oa => {
@@ -456,7 +456,7 @@
     const popTitle = document.getElementById('popover-title');
     const popBody  = document.getElementById('popover-content');
 
-    // Mostrar el popover usando dataset.uid (identidad estable)
+  
     function showPopoverForOA(oaEl) {
       const uid = oaEl.dataset.uid || '';
       const [courseName, oaName] = uid.split('|');
@@ -480,7 +480,7 @@
     backdrop.addEventListener('click', closePopover);
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopover(); });
 
-    // Delegación de eventos para todas las casillas OA (mantener lógica original)
+   
     document.addEventListener('click', (e) => {
       const oa = e.target.closest('.oa');
       if (oa) {
@@ -488,7 +488,7 @@
       }
     });
 
-    // === NUEVO: relaciones entre OAs (categorías y pares) ===
+    
     const relationships = {
       figuras: [
         {from:{course:"6° Básico",oa:"OA 12"}, to:{course:"6° Básico",oa:"OA 16"}},
@@ -543,17 +543,17 @@
       ]
     };
 
-    // Estado
+  
     let activeCategory = null;
 
-    // Obtener elemento OA por UID (no importa en qué contenedor esté)
+    
     function findOAElement(courseName, oaLabel) {
       const uid = `${courseName}|${oaLabel}`;
       const all = Array.from(document.querySelectorAll('.oa'));
       return all.find(it => it.dataset.uid === uid) || null;
     }
 
-    // Asegura que los cursos que contienen las OAs de una lista estén abiertos
+    
     function ensureContainersOpenForPairs(pairs) {
       pairs.forEach(pair => {
         const openContainer = (pair.from && pair.from.course) ? pair.from.course : null;
@@ -566,25 +566,25 @@
       });
     }
 
-    // Limpia highlights y líneas SVG
+   
     function clearAllRelations() {
       activeCategory = null;
-      // quitar clases
+      
       document.querySelectorAll('.oa').forEach(el => {
         el.classList.remove('rel-figuras','rel-medicion','rel-transform');
       });
-      // limpiar SVG
+      
       const svg = document.getElementById('svg-rel');
       while (svg.firstChild) svg.removeChild(svg.firstChild);
     }
 
-    // Dibuja las relaciones activas
+    
     function drawActiveRelationships() {
       if (!activeCategory) return;
       const pairs = relationships[activeCategory];
       const svg = document.getElementById('svg-rel');
 
-      // ajustar svg a tamaño del documento
+     
       const docW = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
       const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
       svg.setAttribute('width', docW);
@@ -592,10 +592,10 @@
       svg.style.width = docW + 'px';
       svg.style.height = docH + 'px';
 
-      // limpiar
+  
       while (svg.firstChild) svg.removeChild(svg.firstChild);
 
-      // defs para marcadores con color según categoría
+  
       const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
       const marker = document.createElementNS('http://www.w3.org/2000/svg','marker');
       marker.setAttribute('id','arrow-'+activeCategory);
@@ -612,16 +612,16 @@
       defs.appendChild(marker);
       svg.appendChild(defs);
 
-      // aseguramos abrir contenedores de OAs involucrados
+   
       ensureContainersOpenForPairs(pairs);
 
-      // dibujar cada par
+     
       pairs.forEach(pair => {
         const el1 = findOAElement(pair.from.course, pair.from.oa);
         const el2 = findOAElement(pair.to.course, pair.to.oa);
         if (!el1 || !el2) return;
 
-        // resaltar según categoría
+        
         if (activeCategory === 'figuras') {
           el1.classList.add('rel-figuras'); el2.classList.add('rel-figuras');
         } else if (activeCategory === 'medicion') {
@@ -630,7 +630,7 @@
           el1.classList.add('rel-transform'); el2.classList.add('rel-transform');
         }
 
-        // coordenadas absolutas (document)
+    
         const r1 = el1.getBoundingClientRect();
         const r2 = el2.getBoundingClientRect();
         const x1 = r1.left + r1.width/2 + window.scrollX;
@@ -638,7 +638,7 @@
         const x2 = r2.left + r2.width/2 + window.scrollX;
         const y2 = r2.top + r2.height/2 + window.scrollY;
 
-        // crear línea
+       
         const line = document.createElementNS('http://www.w3.org/2000/svg','line');
         line.setAttribute('x1', x1);
         line.setAttribute('y1', y1);
@@ -651,7 +651,7 @@
       });
     }
 
-    // Alterna categoría
+
     function toggleRelationship(cat) {
       if (activeCategory === cat) {
         clearAllRelations();
@@ -662,16 +662,13 @@
       drawActiveRelationships();
     }
 
-    // Re-draw cuando se scrollea o cambia tamaño
+   
     window.addEventListener('scroll', () => { if (activeCategory) drawActiveRelationships(); });
     window.addEventListener('resize', () => { if (activeCategory) drawActiveRelationships(); });
 
-    // Inicial: asegurarse svg vacío
     clearAllRelations();
 
-    /* ------------------ HABILIDADES (por UID) ------------------ */
-    // Ejemplo: coloca UIDs en los corchetes. Usa formato "Curso|OA XX"
-    // Resaltar por habilidades
+ 
   const skillsMap = {
     argumentar: [
     "5° Básico|OA 17","5° Básico|OA 18",
@@ -773,9 +770,7 @@
       });
     }
 
-    /* ------------------ INTERCAMBIO ANIMADO (FLIP) ------------------ */
-
-    // Abre visiblemente los contenedores de los cursos involucrados en el swap
+  
     function ensureContainersOpenForOAs(a, b) {
       [a.course, b.course].forEach(courseName => {
         const cont = document.querySelector(`.oas-container[data-curso="${courseName}"]`);
@@ -783,7 +778,7 @@
       });
     }
 
-    // Rect global del elemento (incluye scroll)
+   
     function getGlobalRect(el) {
       const r = el.getBoundingClientRect();
       return { left: r.left + window.scrollX, top: r.top + window.scrollY, width: r.width, height: r.height };
@@ -811,7 +806,7 @@
       });
     }
 
-    // Intercambia dos nodos del DOM
+  
     function swapDom(elA, elB) {
       const parentA = elA.parentNode;
       const parentB = elB.parentNode;
@@ -825,7 +820,7 @@
       parentB.replaceChild(elA, phB);
     }
 
-    // Intercambia A <-> B con animación y redibuja relaciones si estaban activas
+   
     async function swapOAsAnimated(a, b) {
       const elA = findOAElement(a.course, a.oa);
       const elB = findOAElement(b.course, b.oa);
@@ -836,7 +831,7 @@
 
       ensureContainersOpenForOAs(a, b);
 
-      // todos los OAs en los dos contenedores (impactados)
+  
       const impacted = new Set();
       [elA.parentNode, elB.parentNode].forEach(cont => {
         if (!cont) return;
@@ -844,125 +839,102 @@
       });
       const impactedArr = Array.from(impacted);
 
-      // 1) medir antes
+   
       const before = measureRects(impactedArr);
-      // 2) cambiar DOM
+     
       swapDom(elA, elB);
-      // 3) animar hasta su nueva posición
+  
       playFLIP(before, impactedArr, 550);
 
-      // redibujar relaciones si corresponde
+      
       if (activeCategory) {
         setTimeout(drawActiveRelationships, 600);
       }
-      // si hay skill activo, mantener/rehacer resaltado
+     
       if (activeSkill) {
         setTimeout(() => highlightBySkill(activeSkill), 620);
       }
       await new Promise(r => setTimeout(r, 700));
     }
 
-    // Intercambios demo (edítalos a tu gusto)
+   
     const intercambiosDemo = [
-     // { a: { course: "6° Básico", oa: "OA 14" }, b: { course: "5° Básico", oa: "OA 17" } },
-     // { a: { course: "8° Básico", oa: "OA 13" }, b: { course: "I° Medio", oa: "OA 6" } }
-      // añade aquí los pares que quieras intercambiar
+    
     ];
-    // Mover OAs individualmente 
 
-   /* const moveList = [
-      { from: "5° Básico|OA 18", toCourse: "7° Básico" },
-      { from: "6° Básico|OA 14", toCourse: "8° Básico" },
-      { from: "I° Medio|OA 9", toCourse: "II° Medio" }
-    ];
-    */
     async function aplicarIntercambios() {
       for (const par of intercambiosDemo) {
         await swapOAsAnimated(par.a, par.b);
       }
     }
 
-  /* === NUEVO: mover OAs (sin intercambio) === */
-
-  // Lista de movimientos a ejecutar con el botón "Mover OAs"
-  // Puedes editarla libremente. Ejemplo pedido: mover "6° Básico|OA 14" a "I° Medio".
-
   const movimientosDemo = [
     { oa: { course: "5° Básico", oa: "OA 18" }, destino: "7° Básico" },
     { oa: { course: "6° Básico", oa: "OA 14" }, destino: "8° Básico" },
     { oa: { course: "I° Medio", oa: "OA 9" }, destino: "II° Medio" },
-    // agrega más movimientos: { oa:{course:"X",oa:"OA n"}, destino:"Y" },
+   
   ];
 
-  // Asegura que un contenedor de curso esté visible
+
   function ensureContainerOpenByCourse(courseName) {
     const cont = document.querySelector(`.oas-container[data-curso="${courseName}"]`);
     if (cont && !cont.classList.contains('show')) cont.classList.add('show');
     return cont;
   }
 
-  // Mueve un OA desde su curso original a otro curso (al final) con animación FLIP
+
   async function moverOAAnimated(origen, destinoCurso) {
-    // 1) localizar OA por su identidad estable (dataset.uid = "Curso|OA")
+
     const elOA = findOAElement(origen.course, origen.oa);
     if (!elOA) {
       console.warn('No se encontró OA a mover:', origen);
       return;
     }
 
-    // 2) contenedores
+
     const contOrigen  = elOA.parentNode;
     const contDestino = ensureContainerOpenByCourse(destinoCurso);
     if (!contDestino) {
       console.warn('No se encontró curso destino:', destinoCurso);
       return;
     }
-    // asegurar abiertos ambos para medir correctamente
+  
     if (contOrigen && !contOrigen.classList.contains('show')) contOrigen.classList.add('show');
 
-    // 3) elementos impactados (todas las casillas en origen y destino + el propio OA)
+   
     const impacted = new Set();
     contOrigen.querySelectorAll('.oa').forEach(oa => impacted.add(oa));
     contDestino.querySelectorAll('.oa').forEach(oa => impacted.add(oa));
     impacted.add(elOA);
     const impactedArr = Array.from(impacted);
-
-    // 4) medir antes
     const before = measureRects(impactedArr);
-
-    // 5) mover OA al final del destino
     contDestino.appendChild(elOA);
-
-    // 6) animación FLIP usando tus utilidades existentes
     playFLIP(before, impactedArr, 550);
 
-    // 7) refrescar relaciones/habilidades si estaban activas
+   
     if (activeCategory) setTimeout(drawActiveRelationships, 600);
     if (activeSkill)    setTimeout(() => highlightBySkill(activeSkill), 620);
 
     await new Promise(r => setTimeout(r, 700));
   }
-
-  // Ejecuta todos los movimientos definidos en movimientosDemo en secuencia
   async function aplicarMovimientos() {
     for (const mov of movimientosDemo) {
       await moverOAAnimated(mov.oa, mov.destino);
     }
   }
-   /* === NUEVO: aplicar toda la secuencia === */
+
 async function aplicarSecuencia() {
-  // 1. primero intercambios
+  
   for (const par of intercambiosDemo) {
     await swapOAsAnimated(par.a, par.b);
   }
 
-  // 2. luego movimientos
+
   for (const mov of movimientosDemo) {
     await moverOAAnimated(mov.oa, mov.destino);
   }
 }
 
-    // función toggleOAs original (no modificada en esencia)
     function toggleOAs(id) {
       const container = document.getElementById(id);
       container.classList.toggle('show');
@@ -971,3 +943,4 @@ async function aplicarSecuencia() {
   </script>
 </body>
 </html>
+
