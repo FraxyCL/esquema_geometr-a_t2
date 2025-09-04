@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapa de OAs - Geometría (con relaciones)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      font-family: Arial, sans-serif;
+      overflow: auto; /* scroll en ambas direcciones */
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: max-content; /* clave para scroll horizontal */
+      position: relative;
+    }
+
+    .fila {
+      display: flex;
+      align-items: center;
+    }
+
+    .curso {
+      background: #4a90e2;
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      text-align: center;
+      transition: background 0.25s ease;
+      width: 160px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .curso:hover { background: #357abd; }
+
+    .oas-container {
+      display: none;
+      margin-left: 20px;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    .oas-container.show { display: flex; }
+
+    .oa {
+      background: #ffcc00;
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.18);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2; /* sobre SVG */
+    }
+    .oa:hover {
+      transform: translateY(-1px);
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.22);
+    }
+
+    /* Clases de resaltado por categoría */
+    .rel-figuras { background:#ff6666 !important; color:#fff; }
+    .rel-medicion { background:#66cc66 !important; color:#fff; }
+    .rel-transform { background:#6699ff !important; color:#fff; }
+
+    /* Panel lateral de categorías */
+    .panel-rel {
+      position: fixed;
+      right: 18px;
+      top: 10px;  /* posicion panel de relaciones */
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+      z-index: 1200;
+    }
+    .panel-rel h4 { margin: 0 0 8px 0; font-size: 14px; color:#333; }
+    .panel-rel button {
+      display:block;
+      margin: 6px 0;
+      padding: 8px 10px;
+      width: 200px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 700;
+    }
+    .btn-fig { background: #ff6666; }
+    .btn-med { background: #66cc66; color:#063; }
+    .btn-tr { background: #6699ff; }
+
+    /* Panel de habilidades */
+    #panelHabilidades {
+      top: 247px; /* posicion del panel de habilidades */
+    }
+    #panelHabilidades button { width: 200px; margin:4px 0; }
+    
+    /* Panel secuencia (swap) (movimiento de OAs) */
+    #panelSecuencia { top: 520px; }
+    #panelSecuencia button { width: 200px; margin:4px 0; }
+
+    /* SVG conexiones */
+    #svg-rel { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.15);
+      display: none;
+      z-index: 999;
+    }
+    .backdrop.show { display: block; }
+
+    .popover {
+      position: absolute;
+      max-width: min(520px, 90vw);
+      background: #fff;
+      border: 1px solid #4a90e2;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+      z-index: 1300;
+      display: none;
+    }
+    .popover.show { display: block; }
+    .popover h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.05rem;
+      color: #1f3b66;
+    }
+    .popover .close {
+      margin-top: 10px;
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    footer {
+      background: #1f3b66;
+      color: #fff;
+      padding: 12px 20px;
+      text-align: center;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mapa Interactivo de OAs — Geometría📐</h1>
+  <p style="margin-top:-8px;color:#333333">🔶Haz clic en un curso para ver sus OAs y luego haz clic en un “OA X” para ver el objetivo en profundidad.</p>
+  <p style="margin-top:-8px;color:#333333">🔷Usa los paneles de la derecha para ver las relaciones, habilidades y visualizar el cambio de OAs.</p>
+  <p style="margin-top:-8px;color:#333333">🔶Puede revisar los OAs de cada curso en: <a href="pdf/Solo OAs de 5 a IV medio.pdf" target="_blank">Solo OAs</a></p>
+  <p style="margin-top:-8px;color:#333333">🔷Puede ver la recopilación del Curriculum del eje de Geometría en: <a href="pdf/oas_hab_acti_geo.pdf" target="_blank">Documento Completo</a></p>
+  <p style="margin-top:-8px;color:#333333">🔶Los cambios realizados y argumentación puedes encontrarla en: <a href="pdf/cambios_esquema.pdf" target="_blank">Cambios</a></p>
+  
+
+  <!-- SVG para dibujar conexiones -->
+  <svg id="svg-rel"></svg>
+
+  <div class="container" id="mainContainer">
+    <!-- 5° Básico -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-5b')">5° Básico</div>
+      <div class="oas-container" id="oas-5b" data-curso="5° Básico">
+        <div class="oa" data-uid="5° Básico|OA 16">5° OA 16</div>
+        <div class="oa" data-uid="5° Básico|OA 17">5° OA 17</div>
+        <div class="oa" data-uid="5° Básico|OA 18">5° OA 18</div>
+      </div>
+    </div>
+
+    <!-- 6° Básico -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-6b')">6° Básico</div>
+      <div class="oas-container" id="oas-6b" data-curso="6° Básico">
+        <div class="oa" data-uid="6° Básico|OA 12">6° OA 12</div>
+        <div class="oa" data-uid="6° Básico|OA 13">6° OA 13</div>
+        <div class="oa" data-uid="6° Básico|OA 14">6° OA 14</div>
+        <div class="oa" data-uid="6° Básico|OA 15">6° OA 15</div>
+        <div class="oa" data-uid="6° Básico|OA 16">6° OA 16</div>
+        <div class="oa" data-uid="6° Básico|OA 17">6° OA 17</div>
+      </div>
+    </div>
+
+    <!-- 7° Básico -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-7b')">7° Básico</div>
+      <div class="oas-container" id="oas-7b" data-curso="7° Básico">
+        <div class="oa" data-uid="7° Básico|OA 10">7° OA 10</div>
+        <div class="oa" data-uid="7° Básico|OA 11">7° OA 11</div>
+        <div class="oa" data-uid="7° Básico|OA 12">7° OA 12</div>
+        <div class="oa" data-uid="7° Básico|OA 13">7° OA 13</div>
+        <div class="oa" data-uid="7° Básico|OA 14">7° OA 14</div>
+      </div>
+    </div>
+
+    <!-- 8° Básico -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-8b')">8° Básico</div>
+      <div class="oas-container" id="oas-8b" data-curso="8° Básico">
+        <div class="oa" data-uid="8° Básico|OA 11">8° OA 11</div>
+        <div class="oa" data-uid="8° Básico|OA 12">8° OA 12</div>
+        <div class="oa" data-uid="8° Básico|OA 13">8° OA 13</div>
+        <div class="oa" data-uid="8° Básico|OA 14">8° OA 14</div>
+      </div>
+    </div>
+
+    <!-- I° Medio -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-1m')">I° Medio</div>
+      <div class="oas-container" id="oas-1m" data-curso="I° Medio">
+        <div class="oa" data-uid="I° Medio|OA 6">I° OA 6</div>
+        <div class="oa" data-uid="I° Medio|OA 7">I° OA 7</div>
+        <div class="oa" data-uid="I° Medio|OA 8">I° OA 8</div>
+        <div class="oa" data-uid="I° Medio|OA 9">I° OA 9</div>
+        <div class="oa" data-uid="I° Medio|OA 10">I° OA 10</div>
+        <div class="oa" data-uid="I° Medio|OA 11">I° OA 11</div>
+      </div>
+    </div>
+
+    <!-- II° Medio -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-2m')">II° Medio</div>
+      <div class="oas-container" id="oas-2m" data-curso="II° Medio">
+        <div class="oa" data-uid="II° Medio|OA 7">II° OA 7</div>
+        <div class="oa" data-uid="II° Medio|OA 8">II° OA 8</div>
+        <div class="oa" data-uid="II° Medio|OA 9">II° OA 9</div>
+      </div>
+    </div>
+
+    <!-- III° Medio FG -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-3mfg')">III° Medio FG</div>
+      <div class="oas-container" id="oas-3mfg" data-curso="III° Medio FG">
+        <div class="oa" data-uid="III° Medio FG|OAC04">III° OAC04</div>
+      </div>
+    </div>
+
+    <!-- IV° Medio FG -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-4mfg')">IV° Medio FG</div>
+      <div class="oas-container" id="oas-4mfg" data-curso="IV° Medio FG">
+        <div class="oa" data-uid="IV° Medio FG|OAC04">IV° OAC04</div>
+      </div>
+    </div>
+
+    <!-- III° y IV° Medio HC (Geometría 3D) -->
+    <div class="fila">
+      <div class="curso" onclick="toggleOAs('oas-4mhc')">Geometría 3D</div>
+      <div class="oas-container" id="oas-4mhc" data-curso="Geometría 3D">
+        <div class="oa" data-uid="Geometría 3D|OAC01">G3D OAC01</div>
+        <div class="oa" data-uid="Geometría 3D|OAC02">G3D OAC02</div>
+        <div class="oa" data-uid="Geometría 3D|OAC03">G3D OAC03</div>
+        <div class="oa" data-uid="Geometría 3D|OAC04">G3D OAC04</div>
+        <div class="oa" data-uid="Geometría 3D|OAC05">G3D OAC05</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel lateral con categorías -->
+  <div class="panel-rel" id="panelRel">
+    <h4>Relaciones entre OAs</h4>
+    <button class="btn-fig" onclick="toggleRelationship('figuras')">✅Figuras y sus propiedades</button>
+    <button class="btn-med" onclick="toggleRelationship('medicion')">📏Medición y cálculo</button>
+    <button class="btn-tr" onclick="toggleRelationship('transform')">◽Transformaciones y representaciones</button>
+    <button style="background:#000000;" onclick="clearAllRelations()">🧹Limpiar relaciones</button>
+  </div>
+
+  <!-- Panel habilidades -->
+  <div class="panel-rel" id="panelHabilidades">
+    <h4>Habilidades entre OAs</h4>
+    <button style="background:#F73EBE;" onclick="highlightBySkill('argumentar')">🗣️Argumentar y Comunicar</button>
+    <button style="background:#716FC9;" onclick="highlightBySkill('representar')">🧱Representar</button>
+    <button style="background:#F03E73;" onclick="highlightBySkill('resolver')">🔎Resolver problemas</button>
+    <button style="background:#76CC5A;" onclick="highlightBySkill('modelar')">⚙️Modelar</button>
+    <button style="background:#B56D48;" onclick="highlightBySkill('digital')">🖥️Habilidades digitales</button>
+    <button style="background:#000000;" onclick="clearSkillHighlights()">🧹Limpiar habilidades</button>
+  </div>
+
+  <!-- Panel secuencia (intercambios) -->
+  <div class="panel-rel" id="panelSecuencia">
+    <h4>Secuencia (mover OAs)</h4>
+    <button style="background:#9C109E;" onclick="aplicarSecuencia()">🔄Cambio de OAs</button>
+  </div>
+
+  <!-- Backdrop y Popover (misma lógica tuya) -->
+  <div class="backdrop" id="backdrop"></div>
+  <div class="popover" id="popover" role="dialog" aria-modal="true">
+    <h3 id="popover-title">Detalle del OA</h3>
+    <div id="popover-content" style="line-height:1.4"></div>
+    <button class="close" onclick="closePopover()">Cerrar</button>
+  </div>
+
+  <footer style=" background: #1f3b66; color: #fff; padding: 12px 20px; text-align: center; font-size: 0.9rem; line-height: 1.4; margin-top: 30px;">
+    <p>&copy; 2025 - Michael Antonio Núñez Núñez 👨🏻‍🏫- Taller de herramientas didácticas 2 - PLEMC USACH</p>
+  </footer>
+
+  <script>
+    // === NUEVO: mapeo plano (flat) desde oasFullText usando UID "Curso|OA" ===
+    const oasFullText = {
+
+      "5° Básico": {
+        "OA 16": `Identificar y dibujar puntos en el primer cuadrante del plano cartesiano, dadas sus coordenadas en números naturales.
+        ⭐Actitud priorizada: Actitud A (trabajo ordenado y metódico)`,
+        "OA 17": `Describir y dar ejemplos de aristas y caras de figuras 3D y lados de figuras 2D:
+- Que se intersectan 
+- Que son perpendiculares.
+        ⭐Actitud priorizada: Actitud C (curiosidad e interés)`,
+        "OA 18": `Demostrar que comprenden el concepto de congruencia, usando la traslación, la reflexión y la rotación en cuadrículas y mediante software geométrico.
+        ⭐Actitud priorizada: Actitud B (flexibilidad y creatividad en la búsqueda de soluciones)`
+      },
+
+      "6° Básico": {
+        "OA 12": `Construir y comparar triángulos de acuerdo a la medida de sus lados y /o sus ángulos con instrumentos geométricos o software geométrico.
+        ⭐Actitud priorizada: Actitud E (esfuerzo y perseverancia)`,
+        "OA 13": `Demostrar que comprenden el concepto de área de una superficie en cubos y paralelepípedos, calculando el área de sus redes (plantillas) asociadas.
+        ⭐Actitud priorizada: Actitud A (ordenado y metódico)`,
+        "OA 14": `Realizar teselados de figuras 2D usando traslaciones, reflexiones y rotaciones.
+        ⭐Actitud priorizada:Actitud B (flexibilidad y creatividad)`,
+        "OA 15": `Construir ángulos agudos, obtusos, rectos, extendidos y completos con instrumentos geométricos o software geométrico.
+        ⭐Actitud priorizada: Actitud D (actitud positiva frente a sus capacidades)`,
+        "OA 16": `Identificar los ángulos que se forman entre dos rectas que se cortan (pares de ángulos opuestos por el vértice y pares de ángulos complementarios).
+        ⭐Actitud priorizada: Actitud C (curiosidad e interés por aprender matemáticas)`,
+        "OA 17": `Demostrar de manera concreta, pictórica y simbólica que la suma de los ángulos interiores de un triángulo es 180º y de un cuadrilátero es 360º.
+        ⭐Actitud priorizada:`
+      },
+
+      "7° Básico":{
+        "OA 10": `Descubrir relaciones que involucran ángulos exteriores o interiores de diferentes polígonos.
+        ⭐Actitud priorizada: Actitud C (esfuerzo, perseverancia y rigor)`,
+        "OA 11": `Mostrar que comprenden el círculo:
+- Describiendo las relaciones entre el radio, el diámetro y el perímetro del círculo.
+- Estimando de manera intuitiva el perímetro y el área de un círculo.
+- Aplicando las aproximaciones del perímetro y del área en la resolución de problemas.
+- Geométricos de otras asignaturas y de la vida diaria. 
+- Identificándolo como lugar geométrico.
+        ⭐Actitud priorizada: Actitud B (curiosidad e interés por resolver desafíos)`,
+        "OA 12": `Construir objetos geométricos de manera manual y/o con software educativo: 
+- Líneas, como las perpendiculares, las paralelas, las bisectrices y alturas en triángulos y cuadriláteros.
+- Puntos, como el punto medio de un segmento, el centro de gravedad, el centro del círculo inscrito y del circunscrito de un triángulo. 
+- Triángulos y cuadriláteros congruentes.
+        ⭐Actitud priorizada: Actitud D (trabajo en equipo responsable y proactivo)`,
+        "OA 13": `Desarrollar y aplicar la fórmula del área de triángulos, paralelogramos y trapecios.
+        ⭐Actitud priorizada: Actitud A (flexibilidad y creatividad en la búsqueda de soluciones)`,
+        "OA 14": `Identificar puntos en el plano cartesiano, usando pares ordenados y vectores de forma concreta (juegos) y pictórica.
+        ⭐Actitud priorizada: Actitud E (actitud crítica frente a la información matemática)`
+      },
+      
+      "8° Básico":{
+        "OA 11": `Desarrollar las fórmulas para encontrar el área de superficies y el volumen de prismas rectos con diferentes bases y cilindros:
+- Estimando de manera intuitiva área de superficie y volumen.
+- Desplegando la red de prismas rectos para encontrar la fórmula del área de superficie aplicando las aproximaciones del perímetro y del área en la resolución de problemas. 
+- Aplicando las aproximaciones del perímetro y del área en la resolución de problemas. 
+- Aplicando las fórmulas a la resolución de problemas geométricos y de la vida diaria.
+        ⭐Actitud priorizada: Actitud C (esfuerzo, perseverancia y rigor)`,
+        "OA 12": `Explicar, de manera concreta, pictórica y simbólica, la validez del teorema de Pitágoras y aplicar a la resolución de problemas geométricos y de la vida cotidiana, de manera manual y/o con software educativo.
+        ⭐Actitud priorizada: Actitud B (curiosidad e interés por resolver desafíos matemáticos)`,
+        "OA 13": `Describir la posición y el movimiento (traslaciones, rotaciones y reflexiones) de figuras 2D, de manera manual y/o con software educativo, utilizando:
+- Los vectores para la traslación.
+- Los ejes del plano cartesiano como ejes de reflexión. 
+- Los puntos del plano para las rotaciones.
+        ⭐Actitud priorizada: Actitud F (uso responsable de tecnologías de comunicación)`,
+        "OA 14": `Componer rotaciones, traslaciones y reflexiones en el plano cartesiano y en el espacio, de manera manual y/o con software educativo, y aplicar a las simetrías de polígonos y poliedros, y a la resolución de problemas geométricos relacionados con el arte.
+        ⭐Actitud priorizada: Actitud A (flexibilidad y creatividad)`
+      },
+
+      "I° Medio":{
+        "OA 6": `Desarrollar la fórmula de los valores del área y del perímetro de sectores y segmentos circulares, respectivamente, a partir de ángulos centrales de 60°, 90°, 120° y 180°, por medio de representaciones concretas.
+        ⭐Actitud priorizada: Actitud C (esfuerzo, perseverancia y rigor)`,
+        "OA 7": `Desarrollar las fórmulas para encontrar el área de la superficie y el volumen del cono:
+- Desplegando la red del cono para la fórmula del área de superficie.
+- Experimentando de manera concreta para encontrar la relación entre el volumen del cilindro y el cono.
+- Aplicando las fórmulas a la resolución de problemas geométricos y de la vida diaria.
+        ⭐Actitud priorizada: Actitud B (curiosidad e interés por resolver desafíos)`,
+        "OA 8": `Mostrar que comprenden el concepto de homotecia:
+- Relacionándola con la perspectiva, el funcionamiento de instrumentos ópticos y el ojo humano.
+- Midiendo segmentos adecuados para determinar las propiedades de la homotecia. 
+- Aplicando propiedades de la homotecia en la construcción de objetos, de manera manual y/o con software educativo. 
+- Resolviendo problemas de la vida cotidiana y de otras asignaturas.
+        ⭐Actitud priorizada: Actitud A (flexibilidad y creatividad)`,
+        "OA 9": `Desarrollar el teorema de Tales mediante las propiedades de la homotecia, para aplicarlo en la resolución de problemas.
+        ⭐Actitud priorizada: Actitud E (actitud crítica frente a evidencias matemáticas)`,
+        "OA 10": `Aplicar propiedades de semejanza y de proporcionalidad a modelos a escala y otras situaciones de la vida diaria y otras asignaturas.
+        ⭐Actitud priorizada: Actitud D (trabajo en equipo responsable y proactivo)`,
+        "OA 11": `Representar el concepto de homotecia de forma vectorial, relacionándolo con el producto de un vector por un escalar, de manera manual y/o con software educativo.
+        ⭐Actitud priorizada: Actitud F (uso responsable de tecnologías)`
+      },
+
+      "II° Medio":{
+        "OA 7": `Desarrollar las fórmulas del área de la superficie y del volumen de la esfera:
+- Conjeturando la fórmula.
+- Representando de manera concreta y simbólica, de manera manual y/o con software educativo.
+- Resolviendo problemas de la vida diaria y de geometría.
+        ⭐Actitud priorizada: Actitud C (esfuerzo, perseverancia y rigor)`,
+        "OA 8": `Mostrar que comprenden las razones trigonométricas de seno, coseno y tangente en triángulos rectángulos:
+- Relacionándolas con las propiedades de la semejanza y los ángulos. 
+- Explicándolas de manera pictórica y simbólica, de manera manual y/o con software educativo. 
+- Aplicándolas para determinar ángulos o medidas de lados. 
+- Resolviendo problemas geométricos y de otras asignaturas.
+        ⭐Actitud priorizada: Actitud B (curiosidad e interés por resolver desafíos)`,
+        "OA 9": `Aplicar las razones trigonométricas en diversos contextos, en la composición y descomposición de vectores y determinar las proyecciones de vectores.
+        ⭐Actitud priorizada: Actitud E (actitud crítica frente a la información matemática)`
+      },
+
+      "III° Medio FG":{
+        "OAC04":`Resolver problemas de geometría euclidiana que involucran relaciones métricas entre ángulos, arcos, cuerdas y secantes en la circunferencia, de forma manuscrita y con uso de herramientas tecnológicas.
+        ⭐Actitud priorizada: Actitud C (esfuerzo, perseverancia y rigor)`
+      },
+
+      "IV° Medio FG":{
+        "OAC04": `Resolver problemas acerca de rectas y circunferencias en el plano, mediante su representación analítica, de forma manuscrita y con uso de herramientas tecnológicas.
+        ⭐Actitud priorizada: Actitud E (actitud crítica al evaluar evidencias matemáticas)`
+      },
+
+      "Geometría 3D":{
+        "OAC01": `Argumentar acerca de la validez de soluciones a situaciones que involucren isometrías y homotecias en el plano, haciendo uso de vectores y de representaciones digitales.
+        ⭐Actitud priorizada: Actitud E (actitud crítica frente a evidencias matemáticas)`,
+        "OAC02": `Resolver problemas que involucren puntos, rectas y planos en el espacio 3D, haciendo uso de vectores e incluyendo representaciones digitales.
+        ⭐Actitud priorizada: Actitud C (esfuerzo, perseverancia y rigor)`,
+        "OAC03": `Resolver problemas que involucren relaciones entre figuras 3D y 2D en las que intervengan vistas, cortes, proyecciones en el plano o la inscripción de figuras 3D en otras figuras tridimensionales.
+        ⭐Actitud priorizada: Actitud D (trabajo en equipo responsable y proactivo)`,
+        "OAC04": `Formular y verificar conjeturas acerca de la forma, área y volumen de figuras 3D generadas por rotación o traslación de figuras planas en el espacio, incluyendo el uso de herramientas tecnológicas digitales.
+        ⭐Actitud priorizada: Actitud B (curiosidad e interés por resolver desafíos matemáticos)`,
+        "OAC05": `Diseñar propuestas y resolver problemas relacionados con perspectiva, proyección paralela y central, puntos de fuga y elevaciones, tanto en arte como en arquitectura, diseño o construcción, aplicando conceptos y procedimientos de la geometría 3D.
+        ⭐Actitud priorizada: Actitud A (flexibilidad y creatividad en la búsqueda de soluciones)`
+      }
+    };
+
+    // Creamos un mapeo plano por UID: "Curso|OA" -> texto
+    const oasByUID = {};
+    Object.keys(oasFullText).forEach(course => {
+      Object.keys(oasFullText[course]).forEach(oa => {
+        const uid = `${course}|${oa}`;
+        oasByUID[uid] = oasFullText[course][oa];
+      });
+    });
+
+    const backdrop = document.getElementById('backdrop');
+    const popover  = document.getElementById('popover');
+    const popTitle = document.getElementById('popover-title');
+    const popBody  = document.getElementById('popover-content');
+
+    // Mostrar el popover usando dataset.uid (identidad estable)
+    function showPopoverForOA(oaEl) {
+      const uid = oaEl.dataset.uid || '';
+      const [courseName, oaName] = uid.split('|');
+      popTitle.textContent = (oaName ? `${oaName} — ${courseName}` : oaEl.textContent.trim());
+      const fullText = oasByUID[uid] || `Aquí irá el texto completo de ${oaEl.textContent.trim()} de ${courseName || ''}.`;
+      popBody.innerHTML = fullText.replace(/\n/g,'<br>');
+      const r = oaEl.getBoundingClientRect();
+      const left = r.right + window.scrollX + 12;
+      const top  = r.top   + window.scrollY - 6;
+      popover.style.left = left + 'px';
+      popover.style.top  = top  + 'px';
+      backdrop.classList.add('show');
+      popover.classList.add('show');
+    }
+
+    function closePopover() {
+      backdrop.classList.remove('show');
+      popover.classList.remove('show');
+    }
+
+    backdrop.addEventListener('click', closePopover);
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopover(); });
+
+    // Delegación de eventos para todas las casillas OA (mantener lógica original)
+    document.addEventListener('click', (e) => {
+      const oa = e.target.closest('.oa');
+      if (oa) {
+        showPopoverForOA(oa);
+      }
+    });
+
+    // === NUEVO: relaciones entre OAs (categorías y pares) ===
+    const relationships = {
+      figuras: [
+        {from:{course:"6° Básico",oa:"OA 12"}, to:{course:"6° Básico",oa:"OA 16"}},
+        {from:{course:"6° Básico",oa:"OA 12"}, to:{course:"6° Básico",oa:"OA 17"}},
+        {from:{course:"7° Básico",oa:"OA 10"}, to:{course:"7° Básico",oa:"OA 12"}},
+        {from:{course:"II° Medio",oa:"OA 8"}, to:{course:"II° Medio",oa:"OA 9"}},
+        {from:{course:"5° Básico",oa:"OA 17"}, to:{course:"6° Básico",oa:"OA 12"}},
+        {from:{course:"5° Básico",oa:"OA 17"}, to:{course:"6° Básico",oa:"OA 17"}},
+        {from:{course:"7° Básico",oa:"OA 10"}, to:{course:"I° Medio",oa:"OA 9"}},
+        {from:{course:"7° Básico",oa:"OA 11"}, to:{course:"I° Medio",oa:"OA 10"}},
+        {from:{course:"7° Básico",oa:"OA 12"}, to:{course:"I° Medio",oa:"OA 11"}},
+        {from:{course:"I° Medio",oa:"OA 10"}, to:{course:"II° Medio",oa:"OA 8"}},
+        {from:{course:"III° Medio FG",oa:"OAC04"}, to:{course:"IV° Medio FG",oa:"OAC04"}},
+        {from:{course:"Geometría 3D",oa:"OAC02"}, to:{course:"Geometría 3D",oa:"OAC03"}}
+      ],
+      medicion: [
+        {from:{course:"6° Básico",oa:"OA 13"}, to:{course:"6° Básico",oa:"OA 12"}},
+        {from:{course:"7° Básico",oa:"OA 13"}, to:{course:"7° Básico",oa:"OA 10"}},
+        {from:{course:"7° Básico",oa:"OA 13"}, to:{course:"7° Básico",oa:"OA 12"}},
+        {from:{course:"I° Medio",oa:"OA 6"}, to:{course:"I° Medio",oa:"OA 7"}},
+        {from:{course:"II° Medio",oa:"OA 7"}, to:{course:"II° Medio",oa:"OA 8"}},
+        {from:{course:"II° Medio",oa:"OA 7"}, to:{course:"II° Medio",oa:"OA 9"}},
+        {from:{course:"6° Básico",oa:"OA 13"}, to:{course:"8° Básico",oa:"OA 11"}},
+        {from:{course:"7° Básico",oa:"OA 13"}, to:{course:"8° Básico",oa:"OA 11"}},
+        {from:{course:"8° Básico",oa:"OA 11"}, to:{course:"I° Medio",oa:"OA 7"}},
+        {from:{course:"8° Básico",oa:"OA 11"}, to:{course:"II° Medio",oa:"OA 7"}},
+        {from:{course:"II° Medio",oa:"OA 8"}, to:{course:"Geometría 3D",oa:"OAC04"}},
+        {from:{course:"II° Medio",oa:"OA 7"}, to:{course:"Geometría 3D",oa:"OAC04"}}
+      ],
+      transform: [
+        {from:{course:"5° Básico",oa:"OA 16"}, to:{course:"7° Básico",oa:"OA 14"}},
+        {from:{course:"5° Básico",oa:"OA 18"}, to:{course:"5° Básico",oa:"OA 18"}},
+        {from:{course:"5° Básico",oa:"OA 18"}, to:{course:"6° Básico",oa:"OA 14"}},
+
+        {from:{course:"6° Básico",oa:"OA 14"}, to:{course:"6° Básico",oa:"OA 15"}},
+        {from:{course:"6° Básico",oa:"OA 14"}, to:{course:"6° Básico",oa:"OA 17"}},
+        {from:{course:"6° Básico",oa:"OA 14"}, to:{course:"8° Básico",oa:"OA 14"}},
+
+        {from:{course:"8° Básico",oa:"OA 13"}, to:{course:"8° Básico",oa:"OA 14"}},
+        {from:{course:"8° Básico",oa:"OA 13"}, to:{course:"I° Medio",oa:"OA 8"}},
+
+        {from:{course:"I° Medio",oa:"OA 8"}, to:{course:"I° Medio",oa:"OA 9"}},
+        {from:{course:"I° Medio",oa:"OA 9"}, to:{course:"I° Medio",oa:"OA 10"}},
+        {from:{course:"I° Medio",oa:"OA 10"}, to:{course:"I° Medio",oa:"OA 11"}},
+        {from:{course:"I° Medio",oa:"OA 8"}, to:{course:"Geometría 3D",oa:"OAC01"}},
+        {from:{course:"I° Medio",oa:"OA 10"}, to:{course:"Geometría 3D",oa:"OAC05"}},
+
+        {from:{course:"Geometría 3D",oa:"OAC01"}, to:{course:"Geometría 3D",oa:"OAC05"}},
+        {from:{course:"Geometría 3D",oa:"OAC01"}, to:{course:"Geometría 3D",oa:"OAC02"}},
+        
+        
+      ]
+    };
+
+    // Estado
+    let activeCategory = null;
+
+    // Obtener elemento OA por UID (no importa en qué contenedor esté)
+    function findOAElement(courseName, oaLabel) {
+      const uid = `${courseName}|${oaLabel}`;
+      const all = Array.from(document.querySelectorAll('.oa'));
+      return all.find(it => it.dataset.uid === uid) || null;
+    }
+
+    // Asegura que los cursos que contienen las OAs de una lista estén abiertos
+    function ensureContainersOpenForPairs(pairs) {
+      pairs.forEach(pair => {
+        const openContainer = (pair.from && pair.from.course) ? pair.from.course : null;
+        const openContainer2 = (pair.to && pair.to.course) ? pair.to.course : null;
+        [openContainer, openContainer2].forEach(courseName => {
+          if (!courseName) return;
+          const cont = document.querySelector(`.oas-container[data-curso="${courseName}"]`);
+          if (cont && !cont.classList.contains('show')) cont.classList.add('show');
+        });
+      });
+    }
+
+    // Limpia highlights y líneas SVG
+    function clearAllRelations() {
+      activeCategory = null;
+      // quitar clases
+      document.querySelectorAll('.oa').forEach(el => {
+        el.classList.remove('rel-figuras','rel-medicion','rel-transform');
+      });
+      // limpiar SVG
+      const svg = document.getElementById('svg-rel');
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    // Dibuja las relaciones activas
+    function drawActiveRelationships() {
+      if (!activeCategory) return;
+      const pairs = relationships[activeCategory];
+      const svg = document.getElementById('svg-rel');
+
+      // ajustar svg a tamaño del documento
+      const docW = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+      const docH = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      svg.setAttribute('width', docW);
+      svg.setAttribute('height', docH);
+      svg.style.width = docW + 'px';
+      svg.style.height = docH + 'px';
+
+      // limpiar
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+      // defs para marcadores con color según categoría
+      const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+      const marker = document.createElementNS('http://www.w3.org/2000/svg','marker');
+      marker.setAttribute('id','arrow-'+activeCategory);
+      marker.setAttribute('markerWidth','10');
+      marker.setAttribute('markerHeight','10');
+      marker.setAttribute('refX','8');
+      marker.setAttribute('refY','3');
+      marker.setAttribute('orient','auto');
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d','M0,0 L0,6 L9,3 z');
+      const color = activeCategory==='figuras' ? '#ff6666' : (activeCategory==='medicion' ? '#66cc66' : '#6699ff');
+      path.setAttribute('fill', color);
+      marker.appendChild(path);
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+
+      // aseguramos abrir contenedores de OAs involucrados
+      ensureContainersOpenForPairs(pairs);
+
+      // dibujar cada par
+      pairs.forEach(pair => {
+        const el1 = findOAElement(pair.from.course, pair.from.oa);
+        const el2 = findOAElement(pair.to.course, pair.to.oa);
+        if (!el1 || !el2) return;
+
+        // resaltar según categoría
+        if (activeCategory === 'figuras') {
+          el1.classList.add('rel-figuras'); el2.classList.add('rel-figuras');
+        } else if (activeCategory === 'medicion') {
+          el1.classList.add('rel-medicion'); el2.classList.add('rel-medicion');
+        } else if (activeCategory === 'transform') {
+          el1.classList.add('rel-transform'); el2.classList.add('rel-transform');
+        }
+
+        // coordenadas absolutas (document)
+        const r1 = el1.getBoundingClientRect();
+        const r2 = el2.getBoundingClientRect();
+        const x1 = r1.left + r1.width/2 + window.scrollX;
+        const y1 = r1.top + r1.height/2 + window.scrollY;
+        const x2 = r2.left + r2.width/2 + window.scrollX;
+        const y2 = r2.top + r2.height/2 + window.scrollY;
+
+        // crear línea
+        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', color);
+        line.setAttribute('stroke-width','2');
+        line.setAttribute('marker-end','url(#arrow-'+activeCategory+')');
+        svg.appendChild(line);
+      });
+    }
+
+    // Alterna categoría
+    function toggleRelationship(cat) {
+      if (activeCategory === cat) {
+        clearAllRelations();
+        return;
+      }
+      clearAllRelations();
+      activeCategory = cat;
+      drawActiveRelationships();
+    }
+
+    // Re-draw cuando se scrollea o cambia tamaño
+    window.addEventListener('scroll', () => { if (activeCategory) drawActiveRelationships(); });
+    window.addEventListener('resize', () => { if (activeCategory) drawActiveRelationships(); });
+
+    // Inicial: asegurarse svg vacío
+    clearAllRelations();
+
+    /* ------------------ HABILIDADES (por UID) ------------------ */
+    // Ejemplo: coloca UIDs en los corchetes. Usa formato "Curso|OA XX"
+    // Resaltar por habilidades
+  const skillsMap = {
+    argumentar: [
+    "5° Básico|OA 17","5° Básico|OA 18",
+    "6° Básico|OA 12","6° Básico|OA 13","6° Básico|OA 14","6° Básico|OA 15","6° Básico|OA 16","6° Básico|OA 17",
+    "7° Básico|OA 10","7° Básico|OA 11","7° Básico|OA 12","7° Básico|OA 13","7° Básico|OA 14",
+    "8° Básico|OA 11","8° Básico|OA 12","8° Básico|OA 13","8° Básico|OA 14",
+    "I° Medio|OA 6","I° Medio|OA 7","I° Medio|OA 8","I° Medio|OA 9","I° Medio|OA 10","I° Medio|OA 11",
+    "II° Medio|OA 7","II° Medio|OA 8","II° Medio|OA 9",
+    "III° Medio FG|OAC04",
+    "IV° Medio FG|OAC04",
+    "Geometría 3D|OAC01","Geometría 3D|OAC02","Geometría 3D|OAC03","Geometría 3D|OAC04","Geometría 3D|OAC05"
+    ],
+    representar: [
+      "5° Básico|OA 16","5° Básico|OA 17","5° Básico|OA 18",
+      "6° Básico|OA 12","6° Básico|OA 13","6° Básico|OA 14","6° Básico|OA 15","6° Básico|OA 16","6° Básico|OA 17",
+      "7° Básico|OA 10","7° Básico|OA 11","7° Básico|OA 12","7° Básico|OA 13","7° Básico|OA 14",
+      "8° Básico|OA 11","8° Básico|OA 12","8° Básico|OA 13","8° Básico|OA 14",
+      "I° Medio|OA 6","I° Medio|OA 7","I° Medio|OA 8","I° Medio|OA 9","I° Medio|OA 10","I° Medio|OA 11",
+      "II° Medio|OA 7","II° Medio|OA 8","II° Medio|OA 9",
+      "III° Medio FG|OAC04",
+      "IV° Medio FG|OAC04",
+      "Geometría 3D|OAC01","Geometría 3D|OAC02","Geometría 3D|OAC03","Geometría 3D|OAC04","Geometría 3D|OAC05"
+    ],
+    resolver: [
+      "5° Básico|OA 16","5° Básico|OA 17","5° Básico|OA 18",
+      "6° Básico|OA 13","6° Básico|OA 16","6° Básico|OA 17",
+      "7° Básico|OA 10","7° Básico|OA 11","7° Básico|OA 12","7° Básico|OA 13","7° Básico|OA 14",
+      "8° Básico|OA 11","8° Básico|OA 12","8° Básico|OA 13","8° Básico|OA 14",
+      "I° Medio|OA 6","I° Medio|OA 7","I° Medio|OA 8","I° Medio|OA 9","I° Medio|OA 10","I° Medio|OA 11",
+      "II° Medio|OA 7","II° Medio|OA 8","II° Medio|OA 9",
+      "III° Medio FG|OAC04",
+      "IV° Medio FG|OAC04",
+      "Geometría 3D|OAC01","Geometría 3D|OAC02","Geometría 3D|OAC03","Geometría 3D|OAC04","Geometría 3D|OAC05"
+    ],
+    modelar: [
+      "5° Básico|OA 16","5° Básico|OA 17",
+      "6° Básico|OA 12","6° Básico|OA 13","6° Básico|OA 14","6° Básico|OA 15","6° Básico|OA 16","6° Básico|OA 17",
+      "7° Básico|OA 11","7° Básico|OA 12","7° Básico|OA 13","7° Básico|OA 14",
+      "8° Básico|OA 11","8° Básico|OA 12","8° Básico|OA 13","8° Básico|OA 14",
+      "I° Medio|OA 6","I° Medio|OA 7","I° Medio|OA 8","I° Medio|OA 9","I° Medio|OA 10","I° Medio|OA 11",
+      "II° Medio|OA 7","II° Medio|OA 8","II° Medio|OA 9",
+      "III° Medio FG|OAC04",
+      "IV° Medio FG|OAC04",
+      "Geometría 3D|OAC01","Geometría 3D|OAC02","Geometría 3D|OAC03","Geometría 3D|OAC04","Geometría 3D|OAC05"
+    ],
+    digital: [
+      "5° Básico|OA 18",
+      "6° Básico|OA 12","6° Básico|OA 15",
+      "7° Básico|OA 12",
+      "8° Básico|OA 12","8° Básico|OA 13","8° Básico|OA 14",
+      "I° Medio|OA 8","I° Medio|OA 11",
+      "II° Medio|OA 7","II° Medio|OA 8",
+      "III° Medio FG|OAC04",
+      "IV° Medio FG|OAC04",
+      "Geometría 3D|OAC01","Geometría 3D|OAC02","Geometría 3D|OAC03","Geometría 3D|OAC04","Geometría 3D|OAC05"
+    ]
+  };
+
+    function skillColor(skill) {
+      switch(skill) {
+        case 'argumentar': return '#F73EBE';
+        case 'representar': return '#716FC9';
+        case 'resolver': return '#F03E73';
+        case 'modelar': return '#76CC5A';
+        case 'digital': return '#B56D48';
+        default: return '#000';
+      }
+    }
+    function skillBgColor(skill) {
+      switch(skill) {
+        case 'argumentar': return '#ffd6f0';
+        case 'representar': return '#e8e6ff';
+        case 'resolver': return '#ffd6dc';
+        case 'modelar': return '#e9f9e2';
+        case 'digital': return '#f0e0cf';
+        default: return '';
+      }
+    }
+
+    let activeSkill = null;
+    function highlightBySkill(skill) {
+      clearSkillHighlights();
+      activeSkill = skill;
+      const allOAs = document.querySelectorAll('.oa');
+      allOAs.forEach(el => {
+        const uid = el.dataset.uid;
+        if (skillsMap[skill] && skillsMap[skill].includes(uid)) {
+          el.style.outline = `3px solid ${skillColor(skill)}`;
+          el.style.backgroundColor = skillBgColor(skill);
+        }
+      });
+    }
+    function clearSkillHighlights() {
+      activeSkill = null;
+      const allOAs = document.querySelectorAll('.oa');
+      allOAs.forEach(el => {
+        el.style.outline = '';
+        el.style.backgroundColor = '';
+      });
+    }
+
+    /* ------------------ INTERCAMBIO ANIMADO (FLIP) ------------------ */
+
+    // Abre visiblemente los contenedores de los cursos involucrados en el swap
+    function ensureContainersOpenForOAs(a, b) {
+      [a.course, b.course].forEach(courseName => {
+        const cont = document.querySelector(`.oas-container[data-curso="${courseName}"]`);
+        if (cont && !cont.classList.contains('show')) cont.classList.add('show');
+      });
+    }
+
+    // Rect global del elemento (incluye scroll)
+    function getGlobalRect(el) {
+      const r = el.getBoundingClientRect();
+      return { left: r.left + window.scrollX, top: r.top + window.scrollY, width: r.width, height: r.height };
+    }
+    function measureRects(els) {
+      const map = new Map();
+      els.forEach(el => map.set(el, getGlobalRect(el)));
+      return map;
+    }
+    function playFLIP(beforeMap, els, duration = 550) {
+      els.forEach(el => {
+        const b = beforeMap.get(el);
+        if (!b) return;
+        const a = getGlobalRect(el);
+        const dx = b.left - a.left;
+        const dy = b.top  - a.top;
+        if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+          el.style.transition = 'none';
+          el.style.transform  = `translate(${dx}px, ${dy}px)`;
+          void el.offsetWidth; // reflow
+          el.style.transition = `transform ${duration}ms ease`;
+          el.style.transform  = '';
+          setTimeout(() => { el.style.transition = ''; }, duration + 60);
+        }
+      });
+    }
+
+    // Intercambia dos nodos del DOM
+    function swapDom(elA, elB) {
+      const parentA = elA.parentNode;
+      const parentB = elB.parentNode;
+      const nextA = elA.nextSibling;
+      const nextB = elB.nextSibling;
+      const phA = document.createTextNode('');
+      const phB = document.createTextNode('');
+      parentA.insertBefore(phA, nextA);
+      parentB.insertBefore(phB, nextB);
+      parentA.replaceChild(elB, phA);
+      parentB.replaceChild(elA, phB);
+    }
+
+    // Intercambia A <-> B con animación y redibuja relaciones si estaban activas
+    async function swapOAsAnimated(a, b) {
+      const elA = findOAElement(a.course, a.oa);
+      const elB = findOAElement(b.course, b.oa);
+      if (!elA || !elB) {
+        console.warn('No se encontró alguno de los OAs a intercambiar:', a, b);
+        return;
+      }
+
+      ensureContainersOpenForOAs(a, b);
+
+      // todos los OAs en los dos contenedores (impactados)
+      const impacted = new Set();
+      [elA.parentNode, elB.parentNode].forEach(cont => {
+        if (!cont) return;
+        cont.querySelectorAll('.oa').forEach(oa => impacted.add(oa));
+      });
+      const impactedArr = Array.from(impacted);
+
+      // 1) medir antes
+      const before = measureRects(impactedArr);
+      // 2) cambiar DOM
+      swapDom(elA, elB);
+      // 3) animar hasta su nueva posición
+      playFLIP(before, impactedArr, 550);
+
+      // redibujar relaciones si corresponde
+      if (activeCategory) {
+        setTimeout(drawActiveRelationships, 600);
+      }
+      // si hay skill activo, mantener/rehacer resaltado
+      if (activeSkill) {
+        setTimeout(() => highlightBySkill(activeSkill), 620);
+      }
+      await new Promise(r => setTimeout(r, 700));
+    }
+
+    // Intercambios demo (edítalos a tu gusto)
+    const intercambiosDemo = [
+     // { a: { course: "6° Básico", oa: "OA 14" }, b: { course: "5° Básico", oa: "OA 17" } },
+     // { a: { course: "8° Básico", oa: "OA 13" }, b: { course: "I° Medio", oa: "OA 6" } }
+      // añade aquí los pares que quieras intercambiar
+    ];
+    // Mover OAs individualmente 
+
+   /* const moveList = [
+      { from: "5° Básico|OA 18", toCourse: "7° Básico" },
+      { from: "6° Básico|OA 14", toCourse: "8° Básico" },
+      { from: "I° Medio|OA 9", toCourse: "II° Medio" }
+    ];
+    */
+    async function aplicarIntercambios() {
+      for (const par of intercambiosDemo) {
+        await swapOAsAnimated(par.a, par.b);
+      }
+    }
+
+  /* === NUEVO: mover OAs (sin intercambio) === */
+
+  // Lista de movimientos a ejecutar con el botón "Mover OAs"
+  // Puedes editarla libremente. Ejemplo pedido: mover "6° Básico|OA 14" a "I° Medio".
+
+  const movimientosDemo = [
+    { oa: { course: "5° Básico", oa: "OA 18" }, destino: "7° Básico" },
+    { oa: { course: "6° Básico", oa: "OA 14" }, destino: "8° Básico" },
+    { oa: { course: "I° Medio", oa: "OA 9" }, destino: "II° Medio" },
+    // agrega más movimientos: { oa:{course:"X",oa:"OA n"}, destino:"Y" },
+  ];
+
+  // Asegura que un contenedor de curso esté visible
+  function ensureContainerOpenByCourse(courseName) {
+    const cont = document.querySelector(`.oas-container[data-curso="${courseName}"]`);
+    if (cont && !cont.classList.contains('show')) cont.classList.add('show');
+    return cont;
+  }
+
+  // Mueve un OA desde su curso original a otro curso (al final) con animación FLIP
+  async function moverOAAnimated(origen, destinoCurso) {
+    // 1) localizar OA por su identidad estable (dataset.uid = "Curso|OA")
+    const elOA = findOAElement(origen.course, origen.oa);
+    if (!elOA) {
+      console.warn('No se encontró OA a mover:', origen);
+      return;
+    }
+
+    // 2) contenedores
+    const contOrigen  = elOA.parentNode;
+    const contDestino = ensureContainerOpenByCourse(destinoCurso);
+    if (!contDestino) {
+      console.warn('No se encontró curso destino:', destinoCurso);
+      return;
+    }
+    // asegurar abiertos ambos para medir correctamente
+    if (contOrigen && !contOrigen.classList.contains('show')) contOrigen.classList.add('show');
+
+    // 3) elementos impactados (todas las casillas en origen y destino + el propio OA)
+    const impacted = new Set();
+    contOrigen.querySelectorAll('.oa').forEach(oa => impacted.add(oa));
+    contDestino.querySelectorAll('.oa').forEach(oa => impacted.add(oa));
+    impacted.add(elOA);
+    const impactedArr = Array.from(impacted);
+
+    // 4) medir antes
+    const before = measureRects(impactedArr);
+
+    // 5) mover OA al final del destino
+    contDestino.appendChild(elOA);
+
+    // 6) animación FLIP usando tus utilidades existentes
+    playFLIP(before, impactedArr, 550);
+
+    // 7) refrescar relaciones/habilidades si estaban activas
+    if (activeCategory) setTimeout(drawActiveRelationships, 600);
+    if (activeSkill)    setTimeout(() => highlightBySkill(activeSkill), 620);
+
+    await new Promise(r => setTimeout(r, 700));
+  }
+
+  // Ejecuta todos los movimientos definidos en movimientosDemo en secuencia
+  async function aplicarMovimientos() {
+    for (const mov of movimientosDemo) {
+      await moverOAAnimated(mov.oa, mov.destino);
+    }
+  }
+   /* === NUEVO: aplicar toda la secuencia === */
+async function aplicarSecuencia() {
+  // 1. primero intercambios
+  for (const par of intercambiosDemo) {
+    await swapOAsAnimated(par.a, par.b);
+  }
+
+  // 2. luego movimientos
+  for (const mov of movimientosDemo) {
+    await moverOAAnimated(mov.oa, mov.destino);
+  }
+}
+
+    // función toggleOAs original (no modificada en esencia)
+    function toggleOAs(id) {
+      const container = document.getElementById(id);
+      container.classList.toggle('show');
+      if (activeCategory) drawActiveRelationships();
+    }
+  </script>
+</body>
+</html>
